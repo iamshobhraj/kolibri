@@ -2,9 +2,11 @@ import { mount } from '@vue/test-utils';
 import { UserKinds } from 'kolibri/constants';
 import { coreStoreFactory } from 'kolibri/store';
 import UserTable from '../index';
+import coreModule from '../../../../../kolibri/core/assets/src/state/modules/core';
 
 function makeWrapper({ propsData } = {}) {
   const store = coreStoreFactory({});
+  store.registerModule('core', coreModule);
   store.dispatch('notLoading');
   return mount(UserTable, {
     store,
@@ -182,12 +184,16 @@ describe(`UserTable`, () => {
       the parent's v-model value would be after a click, it was not being reflected as I
       expected.
       */
-      xit(`emits the 'input' event with no users in its payload`, () => {
+      it(`emits the 'input' event with no users in its payload`, async () => {
         const wrapper = makeWrapper({
-          propsData: { users: TEST_USERS, selectable: true, value: [] },
+          propsData: { users: TEST_USERS, selectable: true, value: ['id-learner', 'id-coach'] },
         });
         getSelectAllCheckbox(wrapper).trigger('click');
+        await wrapper.vm.$nextTick(); // wait for re-render
         getSelectAllCheckbox(wrapper).trigger('click');
+        await wrapper.vm.$nextTick(); // wait for re-render
+        wrapper.setProps({ value: [] });
+        await wrapper.vm.$nextTick(); // wait for re-render
         expect(wrapper.emitted().input.length).toBe(2);
         expect(wrapper.emitted().input[1][0]).toEqual([]);
       });
